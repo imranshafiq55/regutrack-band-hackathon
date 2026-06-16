@@ -1,0 +1,10 @@
+band-sdk[anthropic,gemini,pydantic-ai]==1.0.0
+pydantic-ai[openai]
+requests
+pandas
+openpyxl
+fpdf2
+python-dotenv
+streamlit
+beautifulsoup4
+pyyaml

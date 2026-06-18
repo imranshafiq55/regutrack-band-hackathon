@@ -74,7 +74,7 @@ async def main():
     os.environ["OPENAI_BASE_URL"] = "https://openrouter.ai/api/v1"
 
     adapter = PydanticAIAdapter(
-        model="openai-chat:google/gemma-4-31b-it:free",
+        model="openai-chat:google/gemma-4-26b-a4b-it:free",
         system_prompt=ANALYZER_SYSTEM_PROMPT,
     )
 

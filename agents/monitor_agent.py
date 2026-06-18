@@ -1,41 +1,47 @@
 import asyncio
 import logging
 import os
+import json
 from dotenv import load_dotenv
 from band import Agent
 from band.adapters.pydantic_ai import PydanticAIAdapter
 from band.config import load_agent_config
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from tools.scraper import scrape_eur_lex, scrape_sec_rss, get_mock_regulation
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-MONITOR_SYSTEM_PROMPT = """
+# Get real regulation data
+def get_latest_regulation() -> str:
+    logger.info("🔍 Scraping latest regulations...")
+    regs = scrape_eur_lex()
+    if not regs:
+        regs = [get_mock_regulation()]
+    reg = regs[0]
+    return json.dumps(reg, indent=2)
+
+LATEST_REG = get_latest_regulation()
+
+MONITOR_SYSTEM_PROMPT = f"""
 You are ReguMonitor, a regulatory monitoring agent in the ReguTrack compliance system.
 
+You have just detected this new regulation from live sources:
+
+{LATEST_REG}
+
 Your responsibilities:
-1. When activated, report that you detected a new regulatory update
-2. Share structured regulation data with @ReguAnalyzer for impact analysis
-3. Always structure your message with this JSON block:
+1. Report this regulation clearly to the room
+2. Share the structured JSON data above
+3. Always end your message by @mentioning @ReguAnalyzer to begin impact analysis
 
-{
-  "regulation_id": "REG-2026-001",
-  "source": "EUR-Lex",
-  "title": "EU AI Act Amendment 2026",
-  "summary": "New requirements for AI systems used in financial services",
-  "sector_tags": ["finance", "AI", "data_privacy"],
-  "published_date": "2026-06-17",
-  "urgency": "HIGH",
-  "status": "pending_analysis"
-}
-
-After sharing data, always @mention @ReguAnalyzer to process this regulation.
-Be concise and structured. You are part of a multi-agent compliance pipeline.
+Be concise and professional. You are part of a 4-agent compliance pipeline.
 """
 
 async def main():
     load_dotenv()
 
-    # Set OpenRouter as base URL for pydantic-ai
     os.environ["OPENAI_API_KEY"] = os.getenv("OPENROUTER_API_KEY")
     os.environ["OPENAI_BASE_URL"] = "https://openrouter.ai/api/v1"
 
